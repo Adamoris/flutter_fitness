@@ -16,11 +16,11 @@ import CoreMotion
     sensorChannel?.setMethodCallHandler({
       (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
       switch call.method {
-      case "startStepsUpdates":
-        self.startStepsUpdates()
+      case "startUpdates":
+        self.startUpdates()
         result(nil)
-      case "stopStepsUpdates":
-        self.stopStepsUpdates()
+      case "stopUpdates":
+        self.stopUpdates()
         result(nil)
       default:
         result(FlutterMethodNotImplemented)

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 
 class SensorData {
   static const MethodChannel _channel = MethodChannel('com.example/sensor');
@@ -106,8 +107,12 @@ class RunScreen extends StatefulWidget {
 class _RunScreenState extends State<RunScreen> {
   // Assume these values will be updated in real-time
   double _caloriesBurned = 0.0;
-  double _stepsTaken = 0.0;
+  int _stepsTaken = 0;
   double _distanceTraveled = 0.0;
+  int _secondsElapsed = 0;
+  double _weightInKg = 70.0;
+  double _metValue = 7.0;
+  late Timer _timer;
 
   @override
   void initState() {
@@ -116,27 +121,45 @@ class _RunScreenState extends State<RunScreen> {
   }
 
   void startRun() async {
+    // _stepsTaken = 0;
+    // _distanceTraveled = 0;
     SensorData.startUpdates((steps) {
       setState(() {
-        _stepsTaken += steps;
+        print("STEPS: $steps");
+        _stepsTaken = steps;
       });
     }, (distance) {
       setState(() {
-        _distanceTraveled += distance;
+        print("DISTANCE: $distance");
+        _distanceTraveled = distance;
+      });
+    });
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _secondsElapsed++;
+        _caloriesBurned = _calculateCaloriesBurned();
       });
     });
   }
 
+  double _calculateCaloriesBurned() {
+    double caloriesPerSecond = 0.0175 * _metValue * _weightInKg / 60;
+    return caloriesPerSecond * _secondsElapsed;
+  }
+
   void endRun() async {
     SensorData.stopUpdates();
+    _timer.cancel();
     // navigate to the summary screen
   }
 
   @override
   Widget build(BuildContext context) {
+    // print("Building: $_stepsTaken steps, $_distanceTraveled distance");
     return Scaffold(
       appBar: AppBar(
-        title: Text("Active Run"),
+        title: const Text("Active Run"),
       ),
       body: Center(
         child: Column(
@@ -146,11 +169,12 @@ class _RunScreenState extends State<RunScreen> {
               "Current Run Stats",
               style: Theme.of(context).textTheme.headlineSmall,
             ),
+            Text("Time elapsed: ${Duration(seconds: _secondsElapsed)}"),
             Text("Calories burned: $_caloriesBurned"),
             Text("Steps Taken: $_stepsTaken"),
             Text("Distance traveled: $_distanceTraveled"),
             ElevatedButton(
-              child: Text("End Run"),
+              child: const Text("End Run"),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -173,7 +197,7 @@ class _RunScreenState extends State<RunScreen> {
 
 class SummaryScreen extends StatelessWidget {
   final double caloriesBurned;
-  final double stepsTaken;
+  final int stepsTaken;
   final double distanceTraveled;
 
   SummaryScreen(
