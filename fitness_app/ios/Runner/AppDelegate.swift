@@ -30,18 +30,19 @@ import CoreMotion
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
   
-  func startStepsUpdates() {
+  func startUpdates() {
     if CMPedometer.isStepCountingAvailable() {
       let now = Date()
       pedometer.startUpdates(from: now) { pedometerData, error in
         if let pedometerData = pedometerData {
           self.sensorChannel?.invokeMethod("stepsUpdate", arguments: pedometerData.numberOfSteps.intValue)
+          self.sensorChannel?.invokeMethod("distanceUpdate", arguments: pedometerData.distance?.doubleValue)
         }
       }
     }
   }
 
-  func stopStepsUpdates() {
+  func stopUpdates() {
     pedometer.stopUpdates()
   }
 }
